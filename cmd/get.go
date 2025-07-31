@@ -51,10 +51,10 @@ func GetBranchProtection(host string, token string, repoOwner string, repoName s
 
 	var query struct {
 		Repository struct {
+			Name graphql.String
 			Ref struct {
 				Name                 graphql.String
 				BranchProtectionRule struct {
-					ID                             graphql.ID
 					AllowsDeletions                graphql.Boolean
 					AllowsForcePushes              graphql.Boolean
 					RequiredApprovingReviewCount   graphql.Int
@@ -82,7 +82,7 @@ func GetBranchProtection(host string, token string, repoOwner string, repoName s
 		return nil, fmt.Errorf("GetBranchProtection: %w", err)
 	}
 
-	b, err := json.MarshalIndent(query.Repository, "", "  ")
+	b, err := json.MarshalIndent(query.Repository.Ref.BranchProtectionRule, "", "  ")
 	fmt.Println(string(b[:]))
 	if err != nil {
 		return nil, err
