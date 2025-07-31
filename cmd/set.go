@@ -1,3 +1,6 @@
+/*
+Copyright © 2025 Alberto Cerato <macros123@gmail.com>
+*/
 package cmd
 
 import (
