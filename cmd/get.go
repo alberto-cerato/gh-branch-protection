@@ -1,9 +1,10 @@
 /*
-Copyright © 2025 Alberto Cerato <macros123@gmail.com>
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 */
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -15,9 +16,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
+// getCmd represents the get command
+var getCmd = &cobra.Command{
+	Use:   "get",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -34,7 +35,8 @@ to quickly create a Cobra application.`,
 		fmt.Println(currentRepo.Host)
 		token, _ := auth.TokenForHost(currentRepo.Host)
 
-		branches, err := ListProtectedBranches(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name)
+		branch := args[0]
+		branches, err := BranchProtectionGet(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Cannot list protected branches: %s\n", err)
 			os.Exit(1)
@@ -46,20 +48,20 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(getCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func ListProtectedBranches(host string, token string, repoOwner string, repoName string) ([]string, error) {
+func BranchProtectionGet(host string, token string, repoOwner string, repoName string, branch string) ([]string, error) {
 	branches := []string{}
 	first := 100 // TODO: allow customization of page size
 
@@ -75,7 +77,8 @@ func ListProtectedBranches(host string, token string, repoOwner string, repoName
 					Node struct {
 						Name                 graphql.String
 						BranchProtectionRule struct {
-							ID graphql.ID
+							ID                    graphql.ID
+							RequiresLinearHistory graphql.Boolean
 						}
 					}
 					Cursor string
@@ -91,6 +94,7 @@ func ListProtectedBranches(host string, token string, repoOwner string, repoName
 	variables := map[string]interface{}{
 		"repoOwner": graphql.String(repoOwner),
 		"repoName":  graphql.String(repoName),
+		"branch":    graphql.String(branch),
 
 		"cursor": graphql.String(""),
 		"first":  graphql.Int(first),
@@ -113,6 +117,13 @@ func ListProtectedBranches(host string, token string, repoOwner string, repoName
 		variables["cursor"] = query.Repository.Refs.PageInfo.EndCursor
 
 		if !query.Repository.Refs.PageInfo.HasNextPage {
+			b, err := json.MarshalIndent(query.Repository, "", "  ")
+
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Println(string(b[:]))
 			break
 		}
 	}
