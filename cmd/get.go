@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/cli/go-gh/v2/pkg/api"
-	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/repository"
 	graphql "github.com/cli/shurcooL-graphql"
 	"github.com/spf13/cobra"
@@ -20,17 +19,16 @@ func init() {
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get the branch protection configuration",
+	Use:   "get <branch>",
+	Short: "Get the branch protection",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		currentRepo, err := repository.Current()
 		if err != nil {
 			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
 		}
-		token, _ := auth.TokenForHost(currentRepo.Host)
 
 		branch := args[0]
-		branches, err := GetBranchProtection(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name, branch)
+		branches, err := GetBranchProtection(currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
 			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
 		}
@@ -41,7 +39,7 @@ var getCmd = &cobra.Command{
 	},
 }
 
-func GetBranchProtection(host string, token string, repoOwner string, repoName string, branch string) ([]string, error) {
+func GetBranchProtection(repoOwner string, repoName string, branch string) ([]string, error) {
 	branches := []string{}
 
 	client, err := api.DefaultGraphQLClient()
