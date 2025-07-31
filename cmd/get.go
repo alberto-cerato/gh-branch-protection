@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/cli/go-gh/v2/pkg/api"
@@ -16,27 +15,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	rootCmd.AddCommand(getCmd)
+}
+
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Get the branch protection configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		currentRepo, err := repository.Current()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Cannot list protected branches: %s", err)
 			os.Exit(1)
 		}
-		fmt.Println(currentRepo.Host)
 		token, _ := auth.TokenForHost(currentRepo.Host)
 
 		branch := args[0]
-		branches, err := BranchProtectionGet(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name, branch)
+		branches, err := GetBranchProtection(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Cannot list protected branches: %s\n", err)
 			os.Exit(1)
@@ -47,85 +43,51 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(getCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func BranchProtectionGet(host string, token string, repoOwner string, repoName string, branch string) ([]string, error) {
+func GetBranchProtection(host string, token string, repoOwner string, repoName string, branch string) ([]string, error) {
 	branches := []string{}
-	first := 100 // TODO: allow customization of page size
 
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
-		return nil, fmt.Errorf("ListProtectedBranches: %w", err)
+		return nil, fmt.Errorf("GetBranchProtection: %w", err)
 	}
 
 	var query struct {
 		Repository struct {
-			Refs struct {
-				Edges []struct {
-					Node struct {
-						Name                 graphql.String
-						BranchProtectionRule struct {
-							ID                    graphql.ID
-							RequiresLinearHistory graphql.Boolean
-						}
-					}
-					Cursor string
+			Ref struct {
+				Name                 graphql.String
+				BranchProtectionRule struct {
+					ID                             graphql.ID
+					AllowsDeletions                graphql.Boolean
+					AllowsForcePushes              graphql.Boolean
+					RequiredApprovingReviewCount   graphql.Int
+					RequiresApprovingReviews       graphql.Boolean
+					RequiresCodeOwnerReviews       graphql.Boolean
+					RequiresCommitSignatures       graphql.Boolean
+					RequiresLinearHistory          graphql.Boolean
+					RequiresConversationResolution graphql.Boolean
+					IsAdminEnforced                graphql.Boolean
+					RestrictsPushes                graphql.Boolean
+					RestrictsReviewDismissals      graphql.Boolean
 				}
-				PageInfo struct {
-					EndCursor   graphql.String
-					HasNextPage graphql.Boolean
-				}
-			} `graphql:"refs(refPrefix: \"refs/heads/\", first: $first, after: $cursor)"`
+			} `graphql:"ref(qualifiedName: $branch)"`
 		} `graphql:"repository(owner: $repoOwner, name: $repoName)"`
 	}
 
 	variables := map[string]interface{}{
 		"repoOwner": graphql.String(repoOwner),
 		"repoName":  graphql.String(repoName),
-		"branch":    graphql.String(branch),
-
-		"cursor": graphql.String(""),
-		"first":  graphql.Int(first),
+		"branch":    graphql.String("refs/heads/" + branch),
 	}
-	for {
-		err = client.Query("ListProtectedBranches", &query, variables)
-		if err != nil {
-			return nil, fmt.Errorf("ListProtectedBranches: %w", err)
-		}
 
-		for _, e := range query.Repository.Refs.Edges {
-			b := e.Node
+	err = client.Query("GetBranchProtection", &query, variables)
+	if err != nil {
+		return nil, fmt.Errorf("GetBranchProtection: %w", err)
+	}
 
-			if b.BranchProtectionRule.ID == nil {
-				continue
-			}
-			slog.Debug("ListProtectedBranches", "Branch", b.Name)
-			branches = append(branches, string(b.Name))
-		}
-		variables["cursor"] = query.Repository.Refs.PageInfo.EndCursor
-
-		if !query.Repository.Refs.PageInfo.HasNextPage {
-			b, err := json.MarshalIndent(query.Repository, "", "  ")
-
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			fmt.Println(string(b[:]))
-			break
-		}
+	b, err := json.MarshalIndent(query.Repository, "", "  ")
+	fmt.Println(string(b[:]))
+	if err != nil {
+		return nil, err
 	}
 
 	return branches, nil
