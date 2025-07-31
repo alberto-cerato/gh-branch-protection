@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/cli/go-gh/v2/pkg/auth"
@@ -23,23 +22,22 @@ func init() {
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get the branch protection configuration",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		currentRepo, err := repository.Current()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Cannot list protected branches: %s", err)
-			os.Exit(1)
+			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
 		}
 		token, _ := auth.TokenForHost(currentRepo.Host)
 
 		branch := args[0]
 		branches, err := GetBranchProtection(currentRepo.Host, token, currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Cannot list protected branches: %s\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
 		}
 		for _, b := range branches {
 			fmt.Println(b)
 		}
+		return nil
 	},
 }
 
