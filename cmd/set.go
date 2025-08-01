@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
@@ -29,23 +28,21 @@ var setCmd = &cobra.Command{
 
 		currentRepo, err := repository.Current()
 		if err != nil {
-			return fmt.Errorf("Cannot set branch protection configuration: %w", err)
+			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
 
 		var rule github.BranchProtectionRule
 		err = json.NewDecoder(os.Stdin).Decode(&rule)
 		if err != nil {
-			return fmt.Errorf("Cannot set branch protection configuration: %w", err)
+			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
-		slog.Debug("setCmd", "operation", "decode JSON input", "rule", rule)
 
 		repoId, err := github.GetRepoID(currentRepo.Owner, currentRepo.Name)
 		if err != nil {
-			return fmt.Errorf("Cannot set branch protection configuration: %w", err)
-
+			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
 		if err := github.CreateBranchProtectionRule(repoId, branch, rule); err != nil {
-			return fmt.Errorf("Cannot set branch protection configuration: %w", err)
+			return fmt.Errorf("Cannot set the branch protection: %w", err)
 
 		}
 		return nil

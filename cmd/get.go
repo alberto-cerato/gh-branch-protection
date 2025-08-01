@@ -19,17 +19,17 @@ func init() {
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get <branch>",
-	Short: "Get the branch protection",
+	Short: "Get the branch protection of a branch",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		currentRepo, err := repository.Current()
 		if err != nil {
-			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
+			return fmt.Errorf("Cannot get the branch protection: %w", err)
 		}
 
 		branch := args[0]
 		branches, err := github.GetBranchProtectionRule(currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
-			return fmt.Errorf("Cannot get branch protection configuration: %w", err)
+			return fmt.Errorf("Cannot get the branch protection: %w", err)
 		}
 		for _, b := range branches {
 			fmt.Println(b)
