@@ -27,13 +27,12 @@ var getCmd = &cobra.Command{
 		}
 
 		branch := args[0]
-		branches, err := github.GetBranchProtectionRule(currentRepo.Owner, currentRepo.Name, branch)
+		branchProtection, err := github.GetBranchProtectionRule(currentRepo.Owner, currentRepo.Name, branch)
 		if err != nil {
 			return fmt.Errorf("Cannot get the branch protection: %w", err)
 		}
-		for _, b := range branches {
-			fmt.Println(b)
-		}
+		fmt.Println(branchProtection)
+
 		return nil
 	},
 }

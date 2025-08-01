@@ -73,12 +73,10 @@ func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) 
 	return branches, nil
 }
 
-func GetBranchProtectionRule(repoOwner string, repoName string, branch string) ([]string, error) {
-	branches := []string{}
-
+func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (string, error) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
-		return nil, fmt.Errorf("GetBranchProtection: %w", err)
+		return "", fmt.Errorf("GetBranchProtection: %w", err)
 	}
 
 	var query struct {
@@ -111,16 +109,15 @@ func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (
 
 	err = client.Query("GetBranchProtection", &query, variables)
 	if err != nil {
-		return nil, fmt.Errorf("GetBranchProtection: %w", err)
+		return "", fmt.Errorf("GetBranchProtection: %w", err)
 	}
 
 	b, err := json.MarshalIndent(query.Repository.Ref.BranchProtectionRule, "", "  ")
-	fmt.Println(string(b[:]))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return branches, nil
+	return string(b), nil
 }
 
 /*
