@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
+	graphql "github.com/cli/shurcooL-graphql"
 	"github.com/spf13/cobra"
 
 	"github.com/alberto-cerato/gh-branch-protection/internal/github"
@@ -31,7 +32,7 @@ var setCmd = &cobra.Command{
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
 
-		var rule github.BranchProtectionRule
+		var rule github.CreateBranchProtectionRuleInput
 		err = json.NewDecoder(os.Stdin).Decode(&rule)
 		if err != nil {
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
@@ -41,7 +42,7 @@ var setCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
-		if err := github.CreateBranchProtectionRule(repoId, branch, rule); err != nil {
+		if err := github.CreateBranchProtectionRule(repoId, graphql.String(branch), rule); err != nil {
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
 
 		}

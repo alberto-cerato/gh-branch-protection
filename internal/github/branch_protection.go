@@ -84,19 +84,7 @@ func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (
 			Name graphql.String
 			Ref  struct {
 				Name                 graphql.String
-				BranchProtectionRule struct {
-					AllowsDeletions                graphql.Boolean
-					AllowsForcePushes              graphql.Boolean
-					RequiredApprovingReviewCount   graphql.Int
-					RequiresApprovingReviews       graphql.Boolean
-					RequiresCodeOwnerReviews       graphql.Boolean
-					RequiresCommitSignatures       graphql.Boolean
-					RequiresLinearHistory          graphql.Boolean
-					RequiresConversationResolution graphql.Boolean
-					IsAdminEnforced                graphql.Boolean
-					RestrictsPushes                graphql.Boolean
-					RestrictsReviewDismissals      graphql.Boolean
-				}
+				BranchProtectionRule BranchProtectionRule
 			} `graphql:"ref(qualifiedName: $branch)"`
 		} `graphql:"repository(owner: $repoOwner, name: $repoName)"`
 	}
@@ -142,7 +130,7 @@ This is the GraphQL that inspired the implementation of the below function.
 	  }
 	}
 */
-func CreateBranchProtectionRule(repositoryId graphql.ID, branch string, rule BranchProtectionRule) error {
+func CreateBranchProtectionRule(repositoryId graphql.ID, branch graphql.String, rule CreateBranchProtectionRuleInput) error {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
 		return fmt.Errorf("CreateBranchProtectionRule: %w", err)
@@ -154,15 +142,14 @@ func CreateBranchProtectionRule(repositoryId graphql.ID, branch string, rule Bra
 				Repository struct {
 					ID graphql.ID
 				}
-				RequiresLinearHistory graphql.Boolean
 			}
-		} `graphql:"createBranchProtectionRule(input: {repositoryId: $repositoryId, pattern: $pattern, requiresLinearHistory: $requiresLinearHistory})"`
+		} `graphql:"createBranchProtectionRule(input: $input)"`
 	}
+
+	rule.RepositoryID = repositoryId
+	rule.Pattern = branch
 	variables := map[string]interface{}{
-		"repositoryId":          repositoryId,
-		"pattern":               graphql.String(branch),
-		"requiresLinearHistory": graphql.Boolean(rule.RequiresLinearHistory),
-		// TODO: add missing branch protections
+		"input": rule,
 	}
 
 	if err = client.Mutate("CreateBranchProtectionRule", &mutation, variables); err != nil {
