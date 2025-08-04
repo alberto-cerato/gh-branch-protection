@@ -22,6 +22,7 @@ type CreateBranchProtectionRuleInput struct {
 }
 
 type BranchProtectionRule struct {
+	ID                             graphql.ID
 	AllowsDeletions                graphql.Boolean
 	AllowsForcePushes              graphql.Boolean
 	RequiredApprovingReviewCount   graphql.Int

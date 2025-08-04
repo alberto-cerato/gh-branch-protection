@@ -73,10 +73,10 @@ func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) 
 	return branches, nil
 }
 
-func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (string, error) {
+func branchProtectionRule(repoOwner string, repoName string, branch string) (*BranchProtectionRule, error) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
-		return "", fmt.Errorf("GetBranchProtection: %w", err)
+		return nil, fmt.Errorf("branchProtectionRule: %w", err)
 	}
 
 	var query struct {
@@ -97,15 +97,55 @@ func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (
 
 	err = client.Query("GetBranchProtection", &query, variables)
 	if err != nil {
-		return "", fmt.Errorf("GetBranchProtection: %w", err)
+		return nil, fmt.Errorf("branchProtectionRule: %w", err)
 	}
 
-	b, err := json.MarshalIndent(query.Repository.Ref.BranchProtectionRule, "", "  ")
+	return &query.Repository.Ref.BranchProtectionRule, nil
+}
+
+func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (string, error) {
+	rule, err := branchProtectionRule(repoOwner, repoName, branch)
+	if err != nil {
+		return "", nil
+	}
+
+	b, err := json.MarshalIndent(rule, "", "  ")
 	if err != nil {
 		return "", err
 	}
 
 	return string(b), nil
+}
+
+func DeleteBranchProtectionRule(repoOwner string, repoName string, branch string) error {
+	rule, err := branchProtectionRule(repoOwner, repoName, branch)
+	if err != nil {
+		return fmt.Errorf("DeleteBranchProtectionRule: %w", err)
+	}
+	if rule.ID == nil {
+		return fmt.Errorf("DeleteBranchProtectionRule: no rule to delete")
+	}
+
+	client, err := api.DefaultGraphQLClient()
+	if err != nil {
+		return fmt.Errorf("DeleteBranchProtectionRule: %w", err)
+	}
+
+	var mutation struct {
+		DeleteBranchProtectionRule struct {
+			ClientMutationId graphql.ID
+		} `graphql:" deleteBranchProtectionRule(input:{branchProtectionRuleId: $branchProtectionRuleId})"`
+	}
+
+	variables := map[string]interface{}{
+		"branchProtectionRuleId": rule.ID,
+	}
+
+	if err = client.Mutate("DeleteBranchProtectionRule", &mutation, variables); err != nil {
+		return fmt.Errorf("DeleteBranchProtectionRule: %w", err)
+	}
+
+	return nil
 }
 
 /*
@@ -153,6 +193,7 @@ func CreateBranchProtectionRule(repositoryId graphql.ID, branch graphql.String, 
 	}
 
 	if err = client.Mutate("CreateBranchProtectionRule", &mutation, variables); err != nil {
+		// TODO: if already exist maybe we should update the existing rule
 		return fmt.Errorf("CreateBranchProtectionRule: %w", err)
 	}
 	return nil
