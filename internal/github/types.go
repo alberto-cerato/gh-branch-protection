@@ -3,7 +3,9 @@ Copyright © 2025 Alberto Cerato <macros123@gmail.com>
 */
 package github
 
-import graphql "github.com/cli/shurcooL-graphql"
+import (
+	graphql "github.com/cli/shurcooL-graphql"
+)
 
 type CreateBranchProtectionRuleInput struct {
 	RepositoryID                   graphql.ID      `json:"repositoryId"`
@@ -35,3 +37,5 @@ type BranchProtectionRule struct {
 	RestrictsPushes                graphql.Boolean
 	RestrictsReviewDismissals      graphql.Boolean
 }
+
+	

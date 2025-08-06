@@ -4,6 +4,8 @@ Copyright © 2025 Alberto Cerato <macros123@gmail.com>
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -12,7 +14,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gh-branch-protection",
-	Short: "Allow to get and set branch protections",
+	Short: "List, get, set, and delete protections on branches",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -20,22 +22,19 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
+		argsError := &WrongArgsError{}
+		if errors.As(err, &argsError) {
+			argsError.Cmd.Usage()
+		} else {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+
 		os.Exit(1)
 	}
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gh-branch-protection.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-
-	// TODO
-	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Suppress usage and error output for subcommands when an error occurs.
+	rootCmd.SilenceUsage = true
+	rootCmd.SilenceErrors = true
 }
-
-

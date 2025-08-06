@@ -23,7 +23,12 @@ func init() {
 var setCmd = &cobra.Command{
 	Use:   "set <branch>",
 	Short: "Set the protection for a branch",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return &WrongArgsError{Arg: 1, Cmd: cmd}
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		branch := args[0]
 

@@ -20,6 +20,12 @@ func init() {
 var getCmd = &cobra.Command{
 	Use:   "get <branch>",
 	Short: "Get the branch protection of a branch",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return &WrongArgsError{Arg: 1, Cmd: cmd}
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		currentRepo, err := repository.Current()
 		if err != nil {
