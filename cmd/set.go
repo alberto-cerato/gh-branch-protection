@@ -30,7 +30,7 @@ var setCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		branch := args[0]
+		pattern := args[0]
 
 		currentRepo, err := repository.Current()
 		if err != nil {
@@ -47,7 +47,7 @@ var setCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
 		}
-		if err := github.CreateBranchProtectionRule(repoId, graphql.String(branch), rule); err != nil {
+		if err := github.CreateBranchProtectionRule(repoId, graphql.String(pattern), rule); err != nil {
 			return fmt.Errorf("Cannot set the branch protection: %w", err)
 
 		}
