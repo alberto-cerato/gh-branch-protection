@@ -4,10 +4,10 @@
 
 ## Features
 
-- ✅ List protected branches in a repository
-- 🔍 Get detailed protection rules for a specific branch
-- ⚙️ Apply branch protection rules via a JSON file
-- 🗑️ Delete branch protection rules from a branch
+- ✅ List all branch protection rules in a repository
+- 🔍 Get detailed protection rule by rule ID
+- ⚙️ Apply branch protection rules via a JSON file and pattern
+- 🗑️ Delete branch protection rules by rule ID
 - 📦 Works seamlessly with GitHub CLI (`gh`)
 - 💻 Simple installation and usage
 
@@ -39,36 +39,38 @@ gh branch-protection [command] [args]
 
 ### Commands
 
-- `list`: List all protected branches in the current repository.
-- `get <branch>`: Get the branch protection rules for a given branch.
-- `set <branch>`: Apply branch protection rules from stdin (expects a valid JSON structure).
-- `delete <branch>`: Delete branch protection rules from a given branch.
+- `list`: List all branch protection rules in the current repository.
+- `get <rule-id>`: Get the branch protection rule for a given rule ID.
+- `set <pattern>`: Apply branch protection rules to branches matching the pattern from stdin (expects a valid JSON structure).
+- `delete <rule-id>`: Delete a branch protection rule by rule ID.
 
 ## Examples
 
-List all protected branches:
+
+List all branch protection rules:
 
 ```sh
 gh branch-protection list
 ```
 
-Get protection rules for the `master` branch:
+Get a branch protection rule by rule ID:
 
 ```sh
-gh branch-protection get master
+gh branch-protection get <rule-id>
 ```
 
-Set protection rules for the `master` branch from a file:
+Set protection rules for branches matching a pattern (e.g., `main`):
 
 ```sh
-cat protection.json | gh branch-protection set master
+cat protection.json | gh branch-protection set main
 ```
 
-Delete protection rules from the `master` branch:
+Delete a branch protection rule by rule ID:
 
 ```sh
-gh branch-protection delete master
+gh branch-protection delete <rule-id>
 ```
+
 
 Example `protection.json`:
 

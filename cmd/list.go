@@ -19,7 +19,7 @@ func init() {
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List protected branches",
+	Short: "List branch protection rules",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		currentRepo, err := repository.Current()
 		if err != nil {

@@ -21,8 +21,11 @@ func init() {
 
 // setCmd represents the set command
 var setCmd = &cobra.Command{
-	Use:   "set <branch>",
-	Short: "Set the protection for a branch",
+	Use:   "set <pattern>",
+	Short: "Set a branch protection rule definition on branches matching the specified pattern",
+	Long: `Apply a branch protection rule to all branches that match the specified <pattern>.
+If the rule definition provided via stdin also contains a 'pattern' field, the <pattern> argument
+will take precedence.`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return &WrongArgsError{Arg: 1, Cmd: cmd}

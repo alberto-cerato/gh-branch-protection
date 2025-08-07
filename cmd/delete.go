@@ -16,8 +16,8 @@ func init() {
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete <branch>",
-	Short: "Delete the protection from a branch",
+	Use:   "delete <rule_id>",
+	Short: "Delete a branch protection rule definition",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return &WrongArgsError{Arg: 1, Cmd: cmd}

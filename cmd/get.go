@@ -19,7 +19,7 @@ func init() {
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get <rule_id>",
-	Short: "Get the branch protection of a branch",
+	Short: "Get a branch protection rule definition",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return &WrongArgsError{Arg: 1, Cmd: cmd}
