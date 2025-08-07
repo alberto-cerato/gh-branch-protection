@@ -7,6 +7,7 @@
 - ✅ List protected branches in a repository  
 - 🔍 Get detailed protection rules for a specific branch  
 - ⚙️ Apply branch protection rules via a JSON file  
+- 🗑️ Delete branch protection rules from a branch  
 - 📦 Works seamlessly with GitHub CLI (`gh`)  
 - 💻 Simple installation and usage  
 
@@ -41,6 +42,7 @@ gh branch-protection [command] [args]
 - `list`: List all protected branches in the current repository.
 - `get <branch>`: Get the branch protection rules for a given branch.
 - `set <branch>`: Apply branch protection rules from stdin (expects a valid JSON structure).
+- `delete <branch>`: Delete branch protection rules from a given branch.
 
 ## Examples
 
@@ -62,6 +64,12 @@ Set protection rules for the `master` branch from a file:
 cat protection.json | gh branch-protection set master
 ```
 
+Delete protection rules from the `master` branch:
+
+```sh
+gh branch-protection delete master
+```
+
 Example `protection.json`:
 
 ```json
@@ -79,6 +87,11 @@ Example `protection.json`:
   "RestrictsReviewDismissals": false
 }
 ```
+
+## Bugs and limitations
+* The `set` command does not overwrite existing protection rules. To update a rule, first delete the current protection, then use the `set` command to apply the new rules.
+* The argument for the `set`, `get`, and `delete` commands is a pattern that can match zero, one, or multiple branches. Currently, these commands expect an existing branch name; if the branch does not exist, the commands will not work. Future improvements should allow these commands to operate regardless of whether the branch exists.
+* Not all the protections are supported yet.
 
 ## License
 
