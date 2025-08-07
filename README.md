@@ -21,10 +21,10 @@ go build
 
 ## Installation
 
-To install the extension locally:
+To install the extension:
 
 ```sh
-gh extensions install .
+gh extension install alberto-cerato/gh-branch-protection
 ```
 
 > ℹ️ Requires [GitHub CLI](https://cli.github.com/) and [Go](https://golang.org/) installed.
