@@ -10,6 +10,8 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
+// GetRepoID returns the GraphQL repository ID for the given owner and repository name.
+// It queries the GitHub GraphQL API and returns the repository ID or an error if the query fails.
 func GetRepoID(owner string, name string) (graphql.ID, error) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {

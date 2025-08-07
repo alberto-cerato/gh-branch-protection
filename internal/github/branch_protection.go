@@ -12,6 +12,8 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
+// ListProtectedBranches returns a list of protected branch names for the given repository owner and name.
+// It queries the GitHub GraphQL API and paginates through all branches.
 func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) {
 	branches := []string{}
 	first := 100 // TODO: allow customization of page size
@@ -73,6 +75,8 @@ func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) 
 	return branches, nil
 }
 
+// branchProtectionRule retrieves the branch protection rule for a specific branch in the given repository.
+// Returns a pointer to BranchProtectionRule or an error if the query fails.
 func branchProtectionRule(repoOwner string, repoName string, branch string) (*BranchProtectionRule, error) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
@@ -103,6 +107,8 @@ func branchProtectionRule(repoOwner string, repoName string, branch string) (*Br
 	return &query.Repository.Ref.BranchProtectionRule, nil
 }
 
+// GetBranchProtectionRule returns the branch protection rule for a branch as a formatted JSON string.
+// If the rule is not found or an error occurs, it returns an empty string and error.
 func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (string, error) {
 	rule, err := branchProtectionRule(repoOwner, repoName, branch)
 	if err != nil {
@@ -117,6 +123,8 @@ func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (
 	return string(b), nil
 }
 
+// DeleteBranchProtectionRule deletes the branch protection rule for the specified branch in the given repository.
+// Returns an error if the rule does not exist or the deletion fails.
 func DeleteBranchProtectionRule(repoOwner string, repoName string, branch string) error {
 	rule, err := branchProtectionRule(repoOwner, repoName, branch)
 	if err != nil {
@@ -153,23 +161,26 @@ This is the GraphQL that inspired the implementation of the below function.
 
 	mutation AddProtection {
 	  createBranchProtectionRule(input:{repositoryId: "R_kgDOPIadBA", pattern:"master", requiresLinearHistory: true}) {
-	    branchProtectionRule {
-	      repository {
-	        id
-	      }
-	      requiresLinearHistory
-	      allowsForcePushes
-	      reviewDismissalAllowances {
-	        nodes {
-	          actor {
-	            __typename
-	          }
-	        }
-	      }
-	    }
+		branchProtectionRule {
+		  repository {
+			id
+		  }
+		  requiresLinearHistory
+		  allowsForcePushes
+		  reviewDismissalAllowances {
+			nodes {
+			  actor {
+				__typename
+			  }
+			}
+		  }
+		}
 	  }
 	}
 */
+// CreateBranchProtectionRule creates a new branch protection rule for the specified repository and branch.
+// The rule parameter should be populated with the desired protection settings.
+// Returns an error if the creation fails.
 func CreateBranchProtectionRule(repositoryId graphql.ID, branch graphql.String, rule CreateBranchProtectionRuleInput) error {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
