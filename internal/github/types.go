@@ -7,6 +7,9 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
+// TODO: we could generate the 2 flat structures using go:generate as they are almost the same
+
+// https://docs.github.com/en/graphql/reference/input-objects#createbranchprotectionruleinput
 type CreateBranchProtectionRuleInput struct {
 	RepositoryID                   graphql.ID      `json:"repositoryId"`
 	Pattern                        graphql.String  `json:"pattern"`
@@ -23,6 +26,7 @@ type CreateBranchProtectionRuleInput struct {
 	RestrictsReviewDismissals      graphql.Boolean `json:"restrictsReviewDismissals"`
 }
 
+// https://docs.github.com/en/graphql/reference/objects#branchprotectionrule
 type BranchProtectionRule struct {
 	ID                             graphql.ID
 	Pattern                        graphql.String
