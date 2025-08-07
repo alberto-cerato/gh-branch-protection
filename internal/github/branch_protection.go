@@ -4,7 +4,6 @@ Copyright © 2025 Alberto Cerato <macros123@gmail.com>
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -12,34 +11,29 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
-// ListProtectedBranches returns a list of protected branch names for the given repository owner and name.
+// ListBranchProtectionRules returns a list of protected branch names for the given repository owner and name.
 // It queries the GitHub GraphQL API and paginates through all branches.
-func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) {
-	branches := []string{}
+func ListBranchProtectionRules(repoOwner string, repoName string) ([]BranchProtectionRule, error) {
+	rules := []BranchProtectionRule{}
 	first := 100 // TODO: allow customization of page size
 
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
-		return nil, fmt.Errorf("ListProtectedBranches: %w", err)
+		return nil, fmt.Errorf("ListBranchProtectionRules: %w", err)
 	}
 
 	var query struct {
 		Repository struct {
-			Refs struct {
+			BranchProtectionRules struct {
 				Edges []struct {
-					Node struct {
-						Name                 graphql.String
-						BranchProtectionRule struct {
-							ID graphql.ID
-						}
-					}
+					Node BranchProtectionRule
 					Cursor string
 				}
 				PageInfo struct {
 					EndCursor   graphql.String
 					HasNextPage graphql.Boolean
 				}
-			} `graphql:"refs(refPrefix: \"refs/heads/\", first: $first, after: $cursor)"`
+			} `graphql:"branchProtectionRules(first: $first, after: $cursor)"`
 		} `graphql:"repository(owner: $repoOwner, name: $repoName)"`
 	}
 
@@ -51,28 +45,28 @@ func ListProtectedBranches(repoOwner string, repoName string) ([]string, error) 
 		"first":  graphql.Int(first),
 	}
 	for {
-		err = client.Query("ListProtectedBranches", &query, variables)
+		err = client.Query("ListBranchProtectionRules", &query, variables)
 		if err != nil {
-			return nil, fmt.Errorf("ListProtectedBranches: %w", err)
+			return nil, fmt.Errorf("ListBranchProtectionRules: %w", err)
 		}
 
-		for _, e := range query.Repository.Refs.Edges {
-			b := e.Node
+		for _, e := range query.Repository.BranchProtectionRules.Edges {
+			r := e.Node
 
-			if b.BranchProtectionRule.ID == nil {
+			if r.ID == nil {
 				continue
 			}
-			slog.Debug("ListProtectedBranches", "Branch", b.Name)
-			branches = append(branches, string(b.Name))
+			slog.Debug("ListBranchProtectionRules", "Pattern", r.Pattern)
+			rules = append(rules, r)
 		}
-		variables["cursor"] = query.Repository.Refs.PageInfo.EndCursor
+		variables["cursor"] = query.Repository.BranchProtectionRules.PageInfo.EndCursor
 
-		if !query.Repository.Refs.PageInfo.HasNextPage {
+		if !query.Repository.BranchProtectionRules.PageInfo.HasNextPage {
 			break
 		}
 	}
 
-	return branches, nil
+	return rules, nil
 }
 
 // branchProtectionRule retrieves the branch protection rule for a specific branch in the given repository.

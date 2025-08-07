@@ -27,12 +27,12 @@ var listCmd = &cobra.Command{
 			
 		}
 
-		branches, err := github.ListProtectedBranches(currentRepo.Owner, currentRepo.Name)
+		branches, err := github.ListBranchProtectionRules(currentRepo.Owner, currentRepo.Name)
 		if err != nil {
 			return fmt.Errorf("Cannot list protected branches: %w\n", err)
 		}
 		for _, b := range branches {
-			fmt.Println(b)
+			fmt.Printf("{id: %s, pattern: %s}\n", b.ID, b.Pattern)
 		}
 
 		return nil
