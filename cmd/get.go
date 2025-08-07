@@ -4,9 +4,9 @@ Copyright © 2025 Alberto Cerato <macros123@gmail.com>
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/spf13/cobra"
 
 	"github.com/alberto-cerato/gh-branch-protection/internal/github"
@@ -18,7 +18,7 @@ func init() {
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get <branch>",
+	Use:   "get <rule_id>",
 	Short: "Get the branch protection of a branch",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
@@ -27,17 +27,16 @@ var getCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		currentRepo, err := repository.Current()
+		id := args[0]
+		rule, err := github.GetBranchProtectionRule(id)
 		if err != nil {
 			return fmt.Errorf("Cannot get the branch protection: %w", err)
 		}
-
-		branch := args[0]
-		branchProtection, err := github.GetBranchProtectionRule(currentRepo.Owner, currentRepo.Name, branch)
+		b, err := json.MarshalIndent(rule, "", "  ")
 		if err != nil {
 			return fmt.Errorf("Cannot get the branch protection: %w", err)
 		}
-		fmt.Println(branchProtection)
+		fmt.Println(string(b))
 
 		return nil
 	},

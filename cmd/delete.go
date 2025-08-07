@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/alberto-cerato/gh-branch-protection/internal/github"
-	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/spf13/cobra"
 )
 
@@ -26,13 +25,8 @@ var deleteCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		currentRepo, err := repository.Current()
-		if err != nil {
-			return fmt.Errorf("Cannot delete the branch protection: %w", err)
-		}
-
-		branch := args[0]
-		if err := github.DeleteBranchProtectionRule(currentRepo.Owner, currentRepo.Name, branch); err != nil {
+		id := args[0]
+		if err := github.DeleteBranchProtectionRule(id); err != nil {
 			return fmt.Errorf("Cannot delete the branch protection: %w", err)
 		}
 

@@ -4,12 +4,12 @@
 
 ## Features
 
-- ✅ List protected branches in a repository  
-- 🔍 Get detailed protection rules for a specific branch  
-- ⚙️ Apply branch protection rules via a JSON file  
-- 🗑️ Delete branch protection rules from a branch  
-- 📦 Works seamlessly with GitHub CLI (`gh`)  
-- 💻 Simple installation and usage  
+- ✅ List protected branches in a repository
+- 🔍 Get detailed protection rules for a specific branch
+- ⚙️ Apply branch protection rules via a JSON file
+- 🗑️ Delete branch protection rules from a branch
+- 📦 Works seamlessly with GitHub CLI (`gh`)
+- 💻 Simple installation and usage
 
 ## Build
 
@@ -90,7 +90,6 @@ Example `protection.json`:
 
 ## Bugs and limitations
 * The `set` command does not overwrite existing protection rules. To update a rule, first delete the current protection, then use the `set` command to apply the new rules.
-* The argument for the `set`, `get`, and `delete` commands is a pattern that can match zero, one, or multiple branches. Currently, these commands expect an existing branch name; if the branch does not exist, the commands will not work. Future improvements should allow these commands to operate regardless of whether the branch exists.
 * Not all the protections are supported yet.
 
 ## License

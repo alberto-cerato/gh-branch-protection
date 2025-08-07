@@ -11,8 +11,8 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
-// ListBranchProtectionRules returns a list of protected branch names for the given repository owner and name.
-// It queries the GitHub GraphQL API and paginates through all branches.
+// ListBranchProtectionRules returns a list of branch protection rules for the given repository owner and name.
+// It queries the GitHub GraphQL API and paginates through all branch protection rules.
 func ListBranchProtectionRules(repoOwner string, repoName string) ([]BranchProtectionRule, error) {
 	rules := []BranchProtectionRule{}
 	first := 100 // TODO: allow customization of page size
@@ -69,65 +69,43 @@ func ListBranchProtectionRules(repoOwner string, repoName string) ([]BranchProte
 	return rules, nil
 }
 
-// branchProtectionRule retrieves the branch protection rule for a specific branch in the given repository.
-// Returns a pointer to BranchProtectionRule or an error if the query fails.
-func branchProtectionRule(repoOwner string, repoName string, branch string) (*BranchProtectionRule, error) {
+// GetBranchProtectionRule retrieves the branch protection rule by its GraphQL node ID.
+// Returns a pointer to BranchProtectionRule or an error if the rule is not found or the query fails.
+func GetBranchProtectionRule(id string) (*BranchProtectionRule, error) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
 		return nil, fmt.Errorf("branchProtectionRule: %w", err)
 	}
-
+	/*
+	query GetRule {
+	node(id: "BPR_kwDOPIadBM4D8Txc") {
+		... on BranchProtectionRule {
+		id
+		pattern
+		# Add any other fields you need here
+		}
+	}
+	}*/
 	var query struct {
-		Repository struct {
-			Name graphql.String
-			Ref  struct {
-				Name                 graphql.String
-				BranchProtectionRule BranchProtectionRule
-			} `graphql:"ref(qualifiedName: $branch)"`
-		} `graphql:"repository(owner: $repoOwner, name: $repoName)"`
+		Node struct {
+			Rule BranchProtectionRule `graphql:"... on BranchProtectionRule"`
+		}  `graphql:"node(id: $id)"`
 	}
 
 	variables := map[string]interface{}{
-		"repoOwner": graphql.String(repoOwner),
-		"repoName":  graphql.String(repoName),
-		"branch":    graphql.String("refs/heads/" + branch),
+		"id": graphql.ID(id),
 	}
-
 	err = client.Query("GetBranchProtection", &query, variables)
 	if err != nil {
-		return nil, fmt.Errorf("branchProtectionRule: %w", err)
+		return nil, fmt.Errorf("GetBranchProtectionRule: %w", err)
 	}
 
-	return &query.Repository.Ref.BranchProtectionRule, nil
+	return &query.Node.Rule, nil
 }
 
-// GetBranchProtectionRule returns the branch protection rule for a branch as a formatted JSON string.
-// If the rule is not found or an error occurs, it returns an empty string and error.
-func GetBranchProtectionRule(repoOwner string, repoName string, branch string) (string, error) {
-	rule, err := branchProtectionRule(repoOwner, repoName, branch)
-	if err != nil {
-		return "", nil
-	}
-
-	b, err := json.MarshalIndent(rule, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return string(b), nil
-}
-
-// DeleteBranchProtectionRule deletes the branch protection rule for the specified branch in the given repository.
+// DeleteBranchProtectionRule deletes the branch protection rule with the specified GraphQL node ID.
 // Returns an error if the rule does not exist or the deletion fails.
-func DeleteBranchProtectionRule(repoOwner string, repoName string, branch string) error {
-	rule, err := branchProtectionRule(repoOwner, repoName, branch)
-	if err != nil {
-		return fmt.Errorf("DeleteBranchProtectionRule: %w", err)
-	}
-	if rule.ID == nil {
-		return fmt.Errorf("DeleteBranchProtectionRule: no rule to delete")
-	}
-
+func DeleteBranchProtectionRule(id string) error {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
 		return fmt.Errorf("DeleteBranchProtectionRule: %w", err)
@@ -140,7 +118,7 @@ func DeleteBranchProtectionRule(repoOwner string, repoName string, branch string
 	}
 
 	variables := map[string]interface{}{
-		"branchProtectionRuleId": rule.ID,
+		"branchProtectionRuleId": id,
 	}
 
 	if err = client.Mutate("DeleteBranchProtectionRule", &mutation, variables); err != nil {
@@ -172,10 +150,10 @@ This is the GraphQL that inspired the implementation of the below function.
 	  }
 	}
 */
-// CreateBranchProtectionRule creates a new branch protection rule for the specified repository and branch.
+// CreateBranchProtectionRule creates a new branch protection rule for the specified repository and pattern.
 // The rule parameter should be populated with the desired protection settings.
 // Returns an error if the creation fails.
-func CreateBranchProtectionRule(repositoryId graphql.ID, branch graphql.String, rule CreateBranchProtectionRuleInput) error {
+func CreateBranchProtectionRule(repositoryId graphql.ID, pattern graphql.String, rule CreateBranchProtectionRuleInput) error {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
 		return fmt.Errorf("CreateBranchProtectionRule: %w", err)
@@ -192,7 +170,7 @@ func CreateBranchProtectionRule(repositoryId graphql.ID, branch graphql.String, 
 	}
 
 	rule.RepositoryID = repositoryId
-	rule.Pattern = branch
+	rule.Pattern = pattern
 	variables := map[string]interface{}{
 		"input": rule,
 	}
